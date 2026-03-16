@@ -12,7 +12,7 @@ import java.time.Instant;
 /**
  * Базовый класс события хаба. Полиморфная десериализация по полю {@code type}.
  */
-@JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type", visible = true)
+@JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type", visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = DeviceAddedEventDto.class, name = "DEVICE_ADDED"),
         @JsonSubTypes.Type(value = DeviceRemovedEventDto.class, name = "DEVICE_REMOVED"),

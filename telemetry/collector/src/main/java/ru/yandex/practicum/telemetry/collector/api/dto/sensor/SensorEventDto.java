@@ -12,7 +12,7 @@ import java.time.Instant;
 /**
  * Базовый класс события датчика. Используется полиморфная десериализация Jackson по полю {@code type}.
  */
-@JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type", visible = true)
+@JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type", visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = ClimateSensorEventDto.class, name = "CLIMATE_SENSOR_EVENT"),
         @JsonSubTypes.Type(value = LightSensorEventDto.class, name = "LIGHT_SENSOR_EVENT"),
