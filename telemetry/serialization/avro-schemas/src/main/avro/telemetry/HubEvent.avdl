@@ -1,4 +1,105 @@
 @namespace("ru.yandex.practicum.kafka.telemetry.event")
+/**
+ * Схемы Avro для событий, связанных с хабом и сценариями умного дома.
+ * Все типы находятся в пространстве имён ru.yandex.practicum.kafka.telemetry.event
+ *
+ * Важно: используем бинарный формат Avro для эффективной передачи и хранения.
+ */
 protocol HubEventProtocol {
 
+  /**
+   * Тип устройства, которое может быть добавлено в хаб.
+   */
+  enum DeviceTypeAvro { MOTION_SENSOR, TEMPERATURE_SENSOR, LIGHT_SENSOR, CLIMATE_SENSOR, SWITCH_SENSOR }
+
+  /**
+   * Тип условия сценария умного дома.
+   */
+  enum ConditionTypeAvro { MOTION, LUMINOSITY, SWITCH, TEMPERATURE, CO2LEVEL, HUMIDITY }
+
+  /**
+   * Операция сравнения/проверки для условия сценария.
+   */
+  enum ConditionOperationAvro { EQUALS, GREATER_THAN, LOWER_THAN }
+
+  /**
+   * Тип действия, выполняемого устройством в рамках сценария.
+   */
+  enum ActionTypeAvro { ACTIVATE, DEACTIVATE, INVERSE, SET_VALUE }
+
+  /**
+   * Событие добавления устройства в хаб.
+   * @field id   Уникальный идентификатор устройства
+   * @field type Тип устройства
+   */
+  record DeviceAddedEventAvro {
+    string id;
+    DeviceTypeAvro type;
+  }
+
+  /**
+   * Событие удаления устройства из хаба.
+   * @field id Уникальный идентификатор устройства
+   */
+  record DeviceRemovedEventAvro {
+    string id;
+  }
+
+  /**
+   * Условие активации сценария.
+   * @field sensor_id  Идентификатор устройства, к которому относится условие
+   * @field type       Тип условия
+   * @field operation  Операция сравнения, применяемая к условию
+   * @field value      Значение для сравнения. Может быть null, int или boolean. По умолчанию null
+   */
+  record ScenarioConditionAvro {
+    string sensor_id;
+    ConditionTypeAvro type;
+    ConditionOperationAvro operation;
+    union { null, int, boolean } value = null;
+  }
+
+  /**
+   * Действие, выполняемое устройством при активации сценария.
+   * @field sensor_id Идентификатор устройства, выполняющего действие
+   * @field type      Тип действия
+   * @field value     Доп. значение (например, уровень яркости). Может быть null или int. По умолчанию null
+   */
+  record DeviceActionAvro {
+    string sensor_id;
+    ActionTypeAvro type;
+    union { null, int } value = null;
+  }
+
+  /**
+   * Событие добавления сценария в хаб.
+   * @field name       Уникальное название сценария
+   * @field conditions Набор условий активации сценария
+   * @field actions    Набор действий, выполняемых при активации сценария
+   */
+  record ScenarioAddedEventAvro {
+    string name;
+    array<ScenarioConditionAvro> conditions;
+    array<DeviceActionAvro> actions;
+  }
+
+  /**
+   * Событие удаления сценария из хаба.
+   * @field name Название сценария (уникально в рамках хаба)
+   */
+  record ScenarioRemovedEventAvro {
+    string name;
+  }
+
+  /**
+   * Обёртка события, происходящего в хабе.
+   * @field hub_id   Идентификатор хаба
+   * @field timestamp Метка времени события (логический тип timestamp-millis)
+   * @field payload  Конкретное событие: добавление/удаление устройства или сценария
+   */
+  record HubEventAvro {
+    string hub_id;
+    @logicalType("timestamp-millis") long timestamp;
+    union { DeviceAddedEventAvro, DeviceRemovedEventAvro, ScenarioAddedEventAvro, ScenarioRemovedEventAvro } payload;
+  }
 }

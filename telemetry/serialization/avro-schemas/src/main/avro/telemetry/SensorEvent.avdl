@@ -1,4 +1,80 @@
 @namespace("ru.yandex.practicum.kafka.telemetry.event")
+/**
+ * Схемы Avro для событий, связанных с показаниями датчиков.
+ * Все типы находятся в пространстве имён ru.yandex.practicum.kafka.telemetry.event
+ */
 protocol SensorEventProtocol {
 
+  /**
+   * Данные с климатического датчика.
+   * @field temperature_c Температура (°C)
+   * @field humidity      Влажность (%)
+   * @field co2_level     Уровень CO2 (ppm)
+   */
+  record ClimateSensorAvro {
+    int temperature_c;
+    int humidity;
+    int co2_level;
+  }
+
+  /**
+   * Данные с датчика света.
+   * @field link_quality Качество связи
+   * @field luminosity   Уровень освещённости
+   */
+  record LightSensorAvro {
+    int link_quality;
+    int luminosity;
+  }
+
+  /**
+   * Данные с датчика движения.
+   * @field link_quality Качество связи
+   * @field motion       Обнаружено ли движение
+   * @field voltage      Уровень напряжения
+   */
+  record MotionSensorAvro {
+    int link_quality;
+    boolean motion;
+    int voltage;
+  }
+
+  /**
+   * Данные с датчика переключателя.
+   * @field state Состояние переключателя (вкл/выкл)
+   */
+  record SwitchSensorAvro {
+    boolean state;
+  }
+
+  /**
+   * Данные с датчика температуры.
+   * Важно: Поля id, hubId и timestamp перечислены в ТЗ прямо внутри этой записи.
+   * @field id             Идентификатор датчика
+   * @field hubId          Идентификатор хаба
+   * @field timestamp      Метка времени события (логический тип timestamp-millis)
+   * @field temperature_c  Температура (°C)
+   * @field temperature_f  Температура (°F)
+   */
+  record TemperatureSensorAvro {
+    string id;
+    string hubId;
+    @logicalType("timestamp-millis") long timestamp;
+    int temperature_c;
+    int temperature_f;
+  }
+
+  /**
+   * Универсальная обёртка события, связанного с сенсором.
+   * @field id        Идентификатор сенсора
+   * @field hubId     Идентификатор хаба
+   * @field timestamp Метка времени события (логический тип timestamp-millis)
+   * @field payload   Конкретные данные события одного из поддерживаемых типов
+   */
+  record SensorEventAvro {
+    string id;
+    string hubId;
+    @logicalType("timestamp-millis") long timestamp;
+    union { ClimateSensorAvro, LightSensorAvro, MotionSensorAvro, SwitchSensorAvro, TemperatureSensorAvro } payload;
+  }
 }
