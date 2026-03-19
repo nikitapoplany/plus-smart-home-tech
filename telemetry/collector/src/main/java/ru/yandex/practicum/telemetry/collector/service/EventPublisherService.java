@@ -1,10 +1,10 @@
 package ru.yandex.practicum.telemetry.collector.service;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
@@ -14,26 +14,24 @@ import ru.yandex.practicum.telemetry.collector.config.AppKafkaProperties;
 import ru.yandex.practicum.telemetry.collector.service.mapper.DtoToAvroMapper;
 import ru.yandex.practicum.telemetry.collector.service.serialization.AvroEncoder;
 
-import java.util.concurrent.CompletableFuture;
-
 /**
- * Публикация событий в Kafka (в бинарном Avro-формате).
+ * Публикация событий в Kafka (в бинарном Avro-формате) с использованием kafka-clients (без Spring Kafka).
  */
 @Service
 public class EventPublisherService {
 
     private static final Logger log = LoggerFactory.getLogger(EventPublisherService.class);
 
-    private final KafkaTemplate<String, byte[]> kafkaTemplate;
+    private final KafkaProducer<String, byte[]> producer;
     private final DtoToAvroMapper mapper;
     private final AvroEncoder encoder;
     private final AppKafkaProperties props;
 
-    public EventPublisherService(KafkaTemplate<String, byte[]> kafkaTemplate,
+    public EventPublisherService(KafkaProducer<String, byte[]> producer,
                                  DtoToAvroMapper mapper,
                                  AvroEncoder encoder,
                                  AppKafkaProperties props) {
-        this.kafkaTemplate = kafkaTemplate;
+        this.producer = producer;
         this.mapper = mapper;
         this.encoder = encoder;
         this.props = props;
@@ -45,15 +43,14 @@ public class EventPublisherService {
     public void publishSensorEvent(SensorEventDto dto) {
         SensorEventAvro avro = mapper.toAvro(dto);
         byte[] bytes = encoder.toBytes(avro);
-        String key = dto.getId();
+        String key = dto.getHubId(); // Ключом сообщений является идентификатор хаба
         String topic = props.getTopics().getSensors();
         log.info("Получено событие сенсора: type={}, id={}, hubId={}", dto.getType(), dto.getId(), dto.getHubId());
-        CompletableFuture<SendResult<String, byte[]>> future = kafkaTemplate.send(topic, key, bytes);
-        future.whenComplete((result, ex) -> {
+        ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, key, bytes);
+        producer.send(record, (RecordMetadata meta, Exception ex) -> {
             if (ex != null) {
                 log.error("Ошибка отправки в Kafka (topic={}, key={})", topic, key, ex);
-            } else if (result != null) {
-                RecordMetadata meta = result.getRecordMetadata();
+            } else if (meta != null) {
                 log.info("Событие сенсора отправлено в Kafka: topic={}, partition={}, offset={}", meta.topic(), meta.partition(), meta.offset());
             }
         });
@@ -68,12 +65,11 @@ public class EventPublisherService {
         String key = dto.getHubId();
         String topic = props.getTopics().getHubs();
         log.info("Получено событие хаба: type={}, hubId={}", dto.getType(), dto.getHubId());
-        CompletableFuture<SendResult<String, byte[]>> future = kafkaTemplate.send(topic, key, bytes);
-        future.whenComplete((result, ex) -> {
+        ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, key, bytes);
+        producer.send(record, (RecordMetadata meta, Exception ex) -> {
             if (ex != null) {
                 log.error("Ошибка отправки в Kafka (topic={}, key={})", topic, key, ex);
-            } else if (result != null) {
-                RecordMetadata meta = result.getRecordMetadata();
+            } else if (meta != null) {
                 log.info("Событие хаба отправлено в Kafka: topic={}, partition={}, offset={}", meta.topic(), meta.partition(), meta.offset());
             }
         });
