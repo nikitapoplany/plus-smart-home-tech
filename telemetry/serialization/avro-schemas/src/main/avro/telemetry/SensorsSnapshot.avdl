@@ -1,0 +1,31 @@
+@namespace("ru.yandex.practicum.kafka.telemetry.event")
+/**
+ * Протокол Avro для снапшотов состояния сенсоров в разрезе хаба.
+ */
+protocol SensorsSnapshotProtocol {
+
+  // Импортируем определения сенсоров и универсального события
+  import idl "SensorEvent.avdl";
+
+  /**
+   * Состояние конкретного датчика в момент времени.
+   * @field timestamp  Время отправки показаний (логический тип timestamp-millis)
+   * @field data       Конкретные показания датчика
+   */
+  record SensorStateAvro {
+    @logicalType("timestamp-millis") long timestamp;
+    union { ClimateSensorAvro, LightSensorAvro, MotionSensorAvro, SwitchSensorAvro, TemperatureSensorAvro } data;
+  }
+
+  /**
+   * Снимок состояния всех известных датчиков конкретного хаба.
+   * @field hubId        Идентификатор хаба
+   * @field timestamp    Метка времени снапшота (обычно равна времени последнего события)
+   * @field sensorsState Отображение: sensorId -> состояние
+   */
+  record SensorsSnapshotAvro {
+    string hubId;
+    @logicalType("timestamp-millis") long timestamp;
+    map<SensorStateAvro> sensorsState;
+  }
+}

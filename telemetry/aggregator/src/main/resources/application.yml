@@ -1,0 +1,11 @@
+app:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    group-id: ${KAFKA_GROUP:aggregator-svc}
+    topics:
+      sensors: ${KAFKA_TOPIC_SENSORS:telemetry.sensors.v1}
+      snapshots: ${KAFKA_TOPIC_SNAPSHOTS:telemetry.snapshots.v1}
+
+logging:
+  level:
+    ru.yandex.practicum.telemetry.aggregator: INFO
