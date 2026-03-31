@@ -16,3 +16,11 @@ logging:
   level:
     root: INFO
     ru.yandex.practicum.telemetry.collector: INFO
+
+echo:
+  enabled: false
+
+grpc:
+  server:
+    # Порт gRPC сервера Collector. Тесты ожидают localhost:59091
+    port: ${GRPC_SERVER_PORT:59091}

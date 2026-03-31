@@ -24,7 +24,7 @@ public class KafkaConsumerConfig {
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SensorEventDeserializer.class);
         config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, props.getAutoOffsetReset());
         return new KafkaConsumer<>(config);
     }
 }

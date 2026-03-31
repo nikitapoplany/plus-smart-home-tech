@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: telemetry-analyzer
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/smarthome}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Миграции БД
+flyway:
+  enabled: true
+
+app:
+  kafka:
+    bootstrapServers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    groups:
+      snapshots: ${KAFKA_GROUP_SNAPSHOTS:analyzer-snapshots}
+      hubs: ${KAFKA_GROUP_HUBS:analyzer-hubs}
+    topics:
+      snapshots: ${KAFKA_TOPIC_SNAPSHOTS:telemetry.snapshots.v1}
+      hubs: ${KAFKA_TOPIC_HUBS:telemetry.hubs.v1}
+
+# Настройки gRPC клиента Hub Router
+grpc:
+  client:
+    hub-router:
+      address: 'static://${HUB_ROUTER_ADDR:localhost:59090}'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
