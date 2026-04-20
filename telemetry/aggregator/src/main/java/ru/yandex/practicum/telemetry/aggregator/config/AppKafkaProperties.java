@@ -14,6 +14,9 @@ public class AppKafkaProperties {
     /** Идентификатор группы консьюмера. */
     private String groupId = "aggregator-svc";
 
+    /** Политика чтения оффсетов для консьюмера (earliest|latest). */
+    private String autoOffsetReset = "latest";
+
     private Topics topics = new Topics();
 
     public static class Topics {
@@ -53,6 +56,14 @@ public class AppKafkaProperties {
 
     public void setGroupId(String groupId) {
         this.groupId = groupId;
+    }
+
+    public String getAutoOffsetReset() {
+        return autoOffsetReset;
+    }
+
+    public void setAutoOffsetReset(String autoOffsetReset) {
+        this.autoOffsetReset = autoOffsetReset;
     }
 
     public Topics getTopics() {
