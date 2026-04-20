@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class CommonExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public ResponseEntity<ApiException> handleApiException(ApiException exception) {
-        return ResponseEntity.status(exception.status()).body(exception);
+    public ResponseEntity<ApiErrorResponse> handleApiException(ApiException exception) {
+        return ResponseEntity.status(exception.status()).body(ApiErrorResponse.from(exception));
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, IllegalArgumentException.class})
-    public ResponseEntity<ApiException> handleBadRequest(Exception exception) {
+    public ResponseEntity<ApiErrorResponse> handleBadRequest(Exception exception) {
         ApiException apiException = new ApiException(org.springframework.http.HttpStatus.BAD_REQUEST, exception.getMessage()) {
         };
-        return ResponseEntity.badRequest().body(apiException);
+        return ResponseEntity.badRequest().body(ApiErrorResponse.from(apiException));
     }
 }

@@ -1,9 +1,5 @@
 package ru.yandex.practicum.commerce.cart.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import feign.FeignException;
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +23,11 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     private final ShoppingCartRepository shoppingCartRepository;
     private final WarehouseClient warehouseClient;
-    private final ObjectMapper objectMapper;
 
     public ShoppingCartServiceImpl(ShoppingCartRepository shoppingCartRepository,
-                                   WarehouseClient warehouseClient,
-                                   ObjectMapper objectMapper) {
+                                   WarehouseClient warehouseClient) {
         this.shoppingCartRepository = shoppingCartRepository;
         this.warehouseClient = warehouseClient;
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -141,29 +134,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     private void ensureWarehouseHasProducts(UUID shoppingCartId, Map<UUID, Long> products) {
-        try {
-            warehouseClient.checkProductQuantityEnoughForShoppingCart(new ShoppingCartDto(shoppingCartId, products));
-        } catch (FeignException.BadRequest exception) {
-            throw new ProductInShoppingCartLowQuantityInWarehouse(extractWarehouseMessage(exception));
-        } catch (FeignException exception) {
-            throw new WarehouseUnavailableException();
-        }
-    }
-
-    private String extractWarehouseMessage(FeignException.BadRequest exception) {
-        String content = exception.contentUTF8();
-        if (content == null || content.isBlank()) {
-            return "Недостаточно товара на складе";
-        }
-        try {
-            JsonNode root = objectMapper.readTree(content);
-            JsonNode userMessage = root.get("userMessage");
-            if (userMessage != null && !userMessage.isNull() && !userMessage.asText().isBlank()) {
-                return userMessage.asText();
-            }
-        } catch (IOException ignored) {
-            return "Недостаточно товара на складе";
-        }
-        return "Недостаточно товара на складе";
+        warehouseClient.checkProductQuantityEnoughForShoppingCart(new ShoppingCartDto(shoppingCartId, products));
     }
 }
