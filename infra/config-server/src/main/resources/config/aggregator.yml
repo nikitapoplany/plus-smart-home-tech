@@ -1,0 +1,11 @@
+app:
+  kafka:
+    group-id: ${KAFKA_GROUP:aggregator-svc}
+    auto-offset-reset: ${KAFKA_AUTO_OFFSET_RESET:latest}
+    topics:
+      sensors: ${KAFKA_TOPIC_SENSORS:telemetry.sensors.v1}
+      snapshots: ${KAFKA_TOPIC_SNAPSHOTS:telemetry.snapshots.v1}
+
+logging:
+  level:
+    ru.yandex.practicum.telemetry.aggregator: INFO
