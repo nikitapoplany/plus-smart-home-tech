@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.cart.client.WarehouseClient;
@@ -14,12 +16,12 @@ import ru.yandex.practicum.commerce.dto.cart.ChangeProductQuantityRequest;
 import ru.yandex.practicum.commerce.dto.cart.ShoppingCartDto;
 import ru.yandex.practicum.commerce.exception.NoProductsInShoppingCartException;
 import ru.yandex.practicum.commerce.exception.NotAuthorizedUserException;
-import ru.yandex.practicum.commerce.exception.ProductInShoppingCartLowQuantityInWarehouse;
-import ru.yandex.practicum.commerce.exception.WarehouseUnavailableException;
 
 @Service
 @Transactional(readOnly = true)
 public class ShoppingCartServiceImpl implements ShoppingCartService {
+
+    private static final Logger log = LoggerFactory.getLogger(ShoppingCartServiceImpl.class);
 
     private final ShoppingCartRepository shoppingCartRepository;
     private final WarehouseClient warehouseClient;
@@ -34,6 +36,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Transactional
     public ShoppingCartDto getShoppingCart(String username) {
         String normalizedUsername = validateUsername(username);
+        log.debug("Получение корзины пользователя {}", normalizedUsername);
         ShoppingCartEntity cart = shoppingCartRepository.findFirstByUsernameOrderByCreatedAtDesc(normalizedUsername)
                 .orElseGet(() -> createCart(normalizedUsername));
         return ShoppingCartMapper.toDto(cart);
@@ -44,6 +47,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     public ShoppingCartDto addProductToShoppingCart(String username, Map<UUID, Long> products) {
         String normalizedUsername = validateUsername(username);
         validateIncomingProducts(products);
+        log.info("Добавление {} товаров в корзину пользователя {}", products.size(), normalizedUsername);
         ShoppingCartEntity cart = shoppingCartRepository.findFirstByUsernameAndActiveTrueOrderByCreatedAtDesc(normalizedUsername)
                 .orElseGet(() -> createCart(normalizedUsername));
 
@@ -54,6 +58,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         ensureWarehouseHasProducts(cart.getShoppingCartId(), candidateProducts);
         cart.setProducts(candidateProducts);
+        log.debug("Корзина пользователя {} обновлена, всего позиций {}", normalizedUsername, candidateProducts.size());
         return ShoppingCartMapper.toDto(shoppingCartRepository.save(cart));
     }
 
@@ -61,10 +66,13 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Transactional
     public void deactivateCurrentShoppingCart(String username) {
         String normalizedUsername = validateUsername(username);
+        log.info("Деактивация активной корзины пользователя {}", normalizedUsername);
         shoppingCartRepository.findFirstByUsernameAndActiveTrueOrderByCreatedAtDesc(normalizedUsername)
                 .ifPresent(cart -> {
                     cart.setActive(false);
                     shoppingCartRepository.save(cart);
+                    log.debug("Корзина {} пользователя {} деактивирована",
+                            cart.getShoppingCartId(), normalizedUsername);
                 });
     }
 
@@ -72,6 +80,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Transactional
     public ShoppingCartDto removeFromShoppingCart(String username, List<UUID> products) {
         String normalizedUsername = validateUsername(username);
+        log.info("Удаление {} товаров из корзины пользователя {}", products.size(), normalizedUsername);
         ShoppingCartEntity cart = getActiveCart(normalizedUsername);
         boolean removed = false;
         for (UUID productId : products) {
@@ -80,6 +89,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         if (!removed) {
             throw new NoProductsInShoppingCartException("В корзине нет указанных товаров");
         }
+        log.debug("Из корзины пользователя {} удалены товары, осталось позиций {}",
+                normalizedUsername, cart.getProducts().size());
         return ShoppingCartMapper.toDto(shoppingCartRepository.save(cart));
     }
 
@@ -87,6 +98,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Transactional
     public ShoppingCartDto changeProductQuantity(String username, ChangeProductQuantityRequest request) {
         String normalizedUsername = validateUsername(username);
+        log.info("Изменение количества товара {} в корзине пользователя {} на {}",
+                request.productId(), normalizedUsername, request.newQuantity());
         ShoppingCartEntity cart = getActiveCart(normalizedUsername);
         if (!cart.getProducts().containsKey(request.productId())) {
             throw new NoProductsInShoppingCartException("Товар отсутствует в корзине");
@@ -97,18 +110,23 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         ensureWarehouseHasProducts(cart.getShoppingCartId(), candidateProducts);
         cart.setProducts(candidateProducts);
+        log.debug("Количество товара {} в корзине пользователя {} изменено",
+                request.productId(), normalizedUsername);
         return ShoppingCartMapper.toDto(shoppingCartRepository.save(cart));
     }
 
     private ShoppingCartEntity getActiveCart(String username) {
+        log.debug("Поиск активной корзины пользователя {}", username);
         return shoppingCartRepository.findFirstByUsernameAndActiveTrueOrderByCreatedAtDesc(username)
                 .orElseThrow(() -> new NoProductsInShoppingCartException("Активная корзина пользователя не найдена"));
     }
 
     private ShoppingCartEntity createCart(String username) {
-        ShoppingCartEntity cart = new ShoppingCartEntity();
-        cart.setUsername(username);
-        cart.setActive(true);
+        ShoppingCartEntity cart = ShoppingCartEntity.builder()
+                .username(username)
+                .active(true)
+                .build();
+        log.info("Создание новой корзины для пользователя {}", username);
         return shoppingCartRepository.save(cart);
     }
 
@@ -134,6 +152,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     private void ensureWarehouseHasProducts(UUID shoppingCartId, Map<UUID, Long> products) {
+        log.debug("Проверка доступности {} товаров на складе для корзины {}",
+                products.size(), shoppingCartId);
         warehouseClient.checkProductQuantityEnoughForShoppingCart(new ShoppingCartDto(shoppingCartId, products));
     }
 }

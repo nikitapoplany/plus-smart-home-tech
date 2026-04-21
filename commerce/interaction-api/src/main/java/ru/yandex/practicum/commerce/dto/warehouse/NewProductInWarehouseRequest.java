@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public record NewProductInWarehouseRequest(
         @NotNull UUID productId,
-        Boolean fragile,
+        @NotNull Boolean fragile,
         @NotNull @Valid DimensionDto dimension,
         @NotNull @DecimalMin("1.0") Double weight
 ) {

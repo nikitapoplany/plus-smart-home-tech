@@ -81,4 +81,58 @@ public class ShoppingCartEntity {
     public void setProducts(Map<UUID, Long> products) {
         this.products = products;
     }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private UUID shoppingCartId;
+        private String username;
+        private Boolean active;
+        private Instant createdAt;
+        private Map<UUID, Long> products;
+
+        private Builder() {
+        }
+
+        public Builder shoppingCartId(UUID shoppingCartId) {
+            this.shoppingCartId = shoppingCartId;
+            return this;
+        }
+
+        public Builder username(String username) {
+            this.username = username;
+            return this;
+        }
+
+        public Builder active(boolean active) {
+            this.active = active;
+            return this;
+        }
+
+        public Builder createdAt(Instant createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Builder products(Map<UUID, Long> products) {
+            this.products = products;
+            return this;
+        }
+
+        public ShoppingCartEntity build() {
+            ShoppingCartEntity entity = new ShoppingCartEntity();
+            entity.shoppingCartId = shoppingCartId;
+            entity.username = username;
+            entity.createdAt = createdAt;
+            if (active != null) {
+                entity.active = active;
+            }
+            if (products != null) {
+                entity.products = new LinkedHashMap<>(products);
+            }
+            return entity;
+        }
+    }
 }
