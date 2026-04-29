@@ -1,0 +1,41 @@
+server:
+  port: 0
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:order-db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: false
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  cloud:
+    openfeign:
+      client:
+        config:
+          delivery:
+            connectTimeout: 3000
+            readTimeout: 5000
+          payment:
+            connectTimeout: 3000
+            readTimeout: 5000
+          warehouse:
+            connectTimeout: 3000
+            readTimeout: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    ru.yandex.practicum.commerce.order: INFO

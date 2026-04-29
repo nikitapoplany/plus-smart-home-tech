@@ -12,7 +12,8 @@ public final class ShoppingCartMapper {
     public static ShoppingCartDto toDto(ShoppingCartEntity entity) {
         return new ShoppingCartDto(
                 entity.getShoppingCartId(),
-                new LinkedHashMap<>(entity.getProducts())
+                new LinkedHashMap<>(entity.getProducts()),
+                entity.getUsername()
         );
     }
 }

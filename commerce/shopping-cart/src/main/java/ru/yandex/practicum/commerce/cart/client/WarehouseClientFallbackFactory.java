@@ -4,13 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import java.io.IOException;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.commerce.dto.cart.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.warehouse.AddProductToWarehouseRequest;
 import ru.yandex.practicum.commerce.dto.warehouse.AddressDto;
+import ru.yandex.practicum.commerce.dto.warehouse.AssemblyProductsForOrderRequest;
 import ru.yandex.practicum.commerce.dto.warehouse.BookedProductsDto;
 import ru.yandex.practicum.commerce.dto.warehouse.NewProductInWarehouseRequest;
+import ru.yandex.practicum.commerce.dto.warehouse.ShippedToDeliveryRequest;
 import ru.yandex.practicum.commerce.exception.ProductInShoppingCartLowQuantityInWarehouse;
 import ru.yandex.practicum.commerce.exception.WarehouseUnavailableException;
 
@@ -38,6 +42,21 @@ public class WarehouseClientFallbackFactory implements FallbackFactory<Warehouse
 
             @Override
             public void addProductToWarehouse(AddProductToWarehouseRequest request) {
+                throw mapToDomainException(cause);
+            }
+
+            @Override
+            public void shippedToDelivery(ShippedToDeliveryRequest request) {
+                throw mapToDomainException(cause);
+            }
+
+            @Override
+            public void acceptReturn(Map<UUID, Long> products) {
+                throw mapToDomainException(cause);
+            }
+
+            @Override
+            public BookedProductsDto assemblyProductsForOrder(AssemblyProductsForOrderRequest request) {
                 throw mapToDomainException(cause);
             }
 
