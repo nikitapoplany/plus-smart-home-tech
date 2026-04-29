@@ -115,9 +115,12 @@ public class OrderServiceImpl implements OrderService {
             order.setPaymentId(payment.paymentId());
             order.setState(OrderState.ON_PAYMENT);
             log.debug("Для заказа {} создана оплата {}", orderId, payment.paymentId());
-        } else {
+        } else if (order.getState() == OrderState.ON_PAYMENT) {
             order.setState(OrderState.PAID);
             log.debug("Заказ {} помечен как оплаченный", orderId);
+        } else {
+            log.debug("Повторное подтверждение оплаты для заказа {} проигнорировано в статусе {}",
+                    orderId, order.getState());
         }
 
         return toDto(orderRepository.save(order));
@@ -128,7 +131,12 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto paymentFailed(UUID orderId) {
         OrderEntity order = getOrder(orderId);
         log.info("Заказ {} получил статус ошибки оплаты", orderId);
-        order.setState(OrderState.PAYMENT_FAILED);
+        if (order.getState() == OrderState.ON_PAYMENT) {
+            order.setState(OrderState.PAYMENT_FAILED);
+        } else {
+            log.debug("Повторный отказ в оплате для заказа {} проигнорирован в статусе {}",
+                    orderId, order.getState());
+        }
         return toDto(orderRepository.save(order));
     }
 
@@ -137,7 +145,12 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto delivery(UUID orderId) {
         OrderEntity order = getOrder(orderId);
         log.info("Заказ {} доставлен", orderId);
-        order.setState(OrderState.DELIVERED);
+        if (order.getState() == OrderState.ON_DELIVERY) {
+            order.setState(OrderState.DELIVERED);
+        } else {
+            log.debug("Повторное подтверждение доставки для заказа {} проигнорировано в статусе {}",
+                    orderId, order.getState());
+        }
         return toDto(orderRepository.save(order));
     }
 
@@ -146,7 +159,12 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto deliveryFailed(UUID orderId) {
         OrderEntity order = getOrder(orderId);
         log.info("Заказ {} получил статус ошибки доставки", orderId);
-        order.setState(OrderState.DELIVERY_FAILED);
+        if (order.getState() == OrderState.ON_DELIVERY) {
+            order.setState(OrderState.DELIVERY_FAILED);
+        } else {
+            log.debug("Повторная ошибка доставки для заказа {} проигнорирована в статусе {}",
+                    orderId, order.getState());
+        }
         return toDto(orderRepository.save(order));
     }
 
@@ -158,12 +176,15 @@ public class OrderServiceImpl implements OrderService {
 
         if (order.getState() == OrderState.DELIVERED) {
             order.setState(OrderState.COMPLETED);
-        } else {
+        } else if (order.getState() == OrderState.PAID) {
             if (order.getDeliveryId() == null) {
                 throw new NoOrderFoundException(orderId);
             }
             deliveryClient.deliveryPicked(order.getDeliveryId());
             order.setState(OrderState.ON_DELIVERY);
+        } else {
+            log.debug("Переход заказа {} в следующий этап пропущен для статуса {}",
+                    orderId, order.getState());
         }
 
         return toDto(orderRepository.save(order));
