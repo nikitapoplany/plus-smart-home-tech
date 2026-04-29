@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import ru.yandex.practicum.telemetry.collector.config.AppKafkaProperties;
 
 /**
@@ -17,6 +18,7 @@ import ru.yandex.practicum.telemetry.collector.config.AppKafkaProperties;
  */
 @SpringBootApplication
 @EnableConfigurationProperties(AppKafkaProperties.class)
+@EnableScheduling
 public class CollectorApplication {
 
     public static void main(String[] args) {

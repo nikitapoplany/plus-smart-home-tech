@@ -1,0 +1,26 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  kafka:
+    topics:
+      sensors: ${KAFKA_TOPIC_SENSORS:telemetry.sensors.v1}
+      hubs: ${KAFKA_TOPIC_HUBS:telemetry.hubs.v1}
+
+logging:
+  level:
+    root: INFO
+    ru.yandex.practicum.telemetry.collector: INFO
+
+echo:
+  enabled: false
+
+grpc:
+  server:
+    port: ${GRPC_SERVER_PORT:59091}
+  client:
+    echo:
+      address: "static://${ECHO_SERVER_ADDRESS:127.0.0.1:9090}"
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
