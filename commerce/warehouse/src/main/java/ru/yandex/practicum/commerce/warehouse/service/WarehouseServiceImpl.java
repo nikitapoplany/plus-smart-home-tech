@@ -152,12 +152,15 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     private BookedProductsDto calculateBookedProducts(Map<UUID, Long> products, boolean reserveProducts) {
+        log.debug("Расчёт параметров товаров склада начат: позиций={}, резервирование={}",
+                products.size(), reserveProducts);
         List<String> shortages = new ArrayList<>();
         double totalWeight = 0;
         double totalVolume = 0;
         boolean fragile = false;
 
         for (Map.Entry<UUID, Long> entry : products.entrySet()) {
+            log.debug("Обработка товара {} в количестве {}", entry.getKey(), entry.getValue());
             WarehouseProductEntity product = warehouseProductRepository.findById(entry.getKey())
                     .orElseThrow(() -> new ProductInShoppingCartNotInWarehouse(
                             "На складе отсутствует товар " + entry.getKey()
@@ -188,6 +191,8 @@ public class WarehouseServiceImpl implements WarehouseService {
             );
         }
 
+        log.debug("Расчёт параметров товаров склада завершён: вес={}, объём={}, хрупкий={}",
+                totalWeight, totalVolume, fragile);
         return new BookedProductsDto(totalWeight, totalVolume, fragile);
     }
 

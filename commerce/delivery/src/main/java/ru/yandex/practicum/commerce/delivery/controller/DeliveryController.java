@@ -2,6 +2,7 @@ package ru.yandex.practicum.commerce.delivery.controller;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.commerce.api.delivery.DeliveryApi;
 import ru.yandex.practicum.commerce.delivery.service.DeliveryService;
@@ -18,8 +19,8 @@ public class DeliveryController implements DeliveryApi {
     }
 
     @Override
-    public DeliveryDto planDelivery(DeliveryDto deliveryDto) {
-        return deliveryService.planDelivery(deliveryDto);
+    public ResponseEntity<DeliveryDto> planDelivery(DeliveryDto deliveryDto) {
+        return ResponseEntity.ok(deliveryService.planDelivery(deliveryDto));
     }
 
     @Override

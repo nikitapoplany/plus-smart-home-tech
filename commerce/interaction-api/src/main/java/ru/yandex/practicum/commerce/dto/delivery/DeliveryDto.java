@@ -12,4 +12,48 @@ public record DeliveryDto(
         @NotNull UUID orderId,
         @NotNull DeliveryState deliveryState
 ) {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private UUID deliveryId;
+        private AddressDto fromAddress;
+        private AddressDto toAddress;
+        private UUID orderId;
+        private DeliveryState deliveryState;
+
+        private Builder() {
+        }
+
+        public Builder deliveryId(UUID deliveryId) {
+            this.deliveryId = deliveryId;
+            return this;
+        }
+
+        public Builder fromAddress(AddressDto fromAddress) {
+            this.fromAddress = fromAddress;
+            return this;
+        }
+
+        public Builder toAddress(AddressDto toAddress) {
+            this.toAddress = toAddress;
+            return this;
+        }
+
+        public Builder orderId(UUID orderId) {
+            this.orderId = orderId;
+            return this;
+        }
+
+        public Builder deliveryState(DeliveryState deliveryState) {
+            this.deliveryState = deliveryState;
+            return this;
+        }
+
+        public DeliveryDto build() {
+            return new DeliveryDto(deliveryId, fromAddress, toAddress, orderId, deliveryState);
+        }
+    }
 }

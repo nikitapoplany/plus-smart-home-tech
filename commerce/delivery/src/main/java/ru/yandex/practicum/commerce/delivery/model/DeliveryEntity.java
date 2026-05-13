@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.util.UUID;
 import ru.yandex.practicum.commerce.dto.delivery.DeliveryState;
 
@@ -44,13 +45,14 @@ public class DeliveryEntity {
     @Column(name = "delivery_state", nullable = false)
     private DeliveryState deliveryState;
 
-    @Column(name = "delivery_weight")
-    private Double deliveryWeight;
+    @Column(name = "delivery_weight", precision = 19, scale = 3)
+    private BigDecimal deliveryWeight;
 
-    @Column(name = "delivery_volume")
-    private Double deliveryVolume;
+    @Column(name = "delivery_volume", precision = 19, scale = 3)
+    private BigDecimal deliveryVolume;
 
-    private Boolean fragile;
+    @Column(nullable = false)
+    private boolean fragile;
 
     public UUID getDeliveryId() {
         return deliveryId;
@@ -92,27 +94,27 @@ public class DeliveryEntity {
         this.deliveryState = deliveryState;
     }
 
-    public Double getDeliveryWeight() {
+    public BigDecimal getDeliveryWeight() {
         return deliveryWeight;
     }
 
-    public void setDeliveryWeight(Double deliveryWeight) {
+    public void setDeliveryWeight(BigDecimal deliveryWeight) {
         this.deliveryWeight = deliveryWeight;
     }
 
-    public Double getDeliveryVolume() {
+    public BigDecimal getDeliveryVolume() {
         return deliveryVolume;
     }
 
-    public void setDeliveryVolume(Double deliveryVolume) {
+    public void setDeliveryVolume(BigDecimal deliveryVolume) {
         this.deliveryVolume = deliveryVolume;
     }
 
-    public Boolean getFragile() {
+    public boolean isFragile() {
         return fragile;
     }
 
-    public void setFragile(Boolean fragile) {
+    public void setFragile(boolean fragile) {
         this.fragile = fragile;
     }
 

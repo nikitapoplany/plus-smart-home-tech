@@ -4,11 +4,13 @@ import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.commerce.dto.cart.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.delivery.DeliveryDto;
 import ru.yandex.practicum.commerce.dto.delivery.DeliveryState;
 import ru.yandex.practicum.commerce.dto.order.CreateNewOrderRequest;
@@ -28,25 +30,15 @@ import ru.yandex.practicum.commerce.order.model.OrderEntity;
 import ru.yandex.practicum.commerce.order.repository.OrderRepository;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class OrderServiceImpl implements OrderService {
-
-    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     private final OrderRepository orderRepository;
     private final DeliveryClient deliveryClient;
     private final PaymentClient paymentClient;
     private final WarehouseClient warehouseClient;
-
-    public OrderServiceImpl(OrderRepository orderRepository,
-                            DeliveryClient deliveryClient,
-                            PaymentClient paymentClient,
-                            WarehouseClient warehouseClient) {
-        this.orderRepository = orderRepository;
-        this.deliveryClient = deliveryClient;
-        this.paymentClient = paymentClient;
-        this.warehouseClient = warehouseClient;
-    }
 
     @Override
     public List<OrderDto> getClientOrders(String username) {
@@ -77,13 +69,16 @@ public class OrderServiceImpl implements OrderService {
         OrderEntity savedOrder = orderRepository.save(order);
 
         AddressDto warehouseAddress = warehouseClient.getWarehouseAddress();
-        DeliveryDto delivery = deliveryClient.planDelivery(new DeliveryDto(
-                null,
-                warehouseAddress,
-                request.deliveryAddress(),
-                savedOrder.getOrderId(),
-                DeliveryState.CREATED
-        ));
+        DeliveryDto delivery = Objects.requireNonNull(
+                deliveryClient.planDelivery(DeliveryDto.builder()
+                                .fromAddress(warehouseAddress)
+                                .toAddress(request.deliveryAddress())
+                                .orderId(savedOrder.getOrderId())
+                                .deliveryState(DeliveryState.CREATED)
+                                .build())
+                        .getBody(),
+                "Сервис доставки вернул пустой ответ при планировании доставки"
+        );
         savedOrder.setDeliveryId(delivery.deliveryId());
 
         log.debug("Заказ {} создан, доставка {} запланирована", savedOrder.getOrderId(), savedOrder.getDeliveryId());
@@ -258,7 +253,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         BookedProductsDto bookedProducts = warehouseClient.checkProductQuantityEnoughForShoppingCart(
-                new ru.yandex.practicum.commerce.dto.cart.ShoppingCartDto(
+                new ShoppingCartDto(
                         order.getShoppingCartId(),
                         order.getProducts(),
                         order.getUsername()
