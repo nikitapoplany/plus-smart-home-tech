@@ -154,6 +154,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private void ensureWarehouseHasProducts(UUID shoppingCartId, Map<UUID, Long> products) {
         log.debug("Проверка доступности {} товаров на складе для корзины {}",
                 products.size(), shoppingCartId);
-        warehouseClient.checkProductQuantityEnoughForShoppingCart(new ShoppingCartDto(shoppingCartId, products));
+        warehouseClient.checkProductQuantityEnoughForShoppingCart(new ShoppingCartDto(shoppingCartId, products, null));
     }
 }
